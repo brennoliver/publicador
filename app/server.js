@@ -202,6 +202,39 @@ app.post('/api/clients/:slug/login', async (req, res) => {
   });
 });
 
+// POST /api/clients/:slug/upload-session — recebe arquivo de sessão gerado localmente
+app.post('/api/clients/:slug/upload-session', upload.single('session'), (req, res) => {
+  const { slug } = req.params;
+  const client = loadClient(slug);
+  if (!client) return res.status(404).json({ error: 'Cliente não encontrado' });
+  if (!req.file) return res.status(400).json({ error: 'Arquivo de sessão obrigatório' });
+
+  try {
+    const content = fs.readFileSync(req.file.path, 'utf8');
+    JSON.parse(content); // valida que é JSON válido
+    const sessionFile = path.join(SESSIONS_DIR, `${slug}.json`);
+    fs.copyFileSync(req.file.path, sessionFile);
+    fs.unlinkSync(req.file.path);
+
+    const cfg = loadClient(slug);
+    cfg.hasSession = true;
+    cfg.sessionUpdatedAt = new Date().toISOString().slice(0, 10);
+    fs.writeFileSync(clientPath(slug), JSON.stringify(cfg, null, 2));
+
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ error: 'Arquivo de sessão inválido: ' + err.message });
+  }
+});
+
+// GET /api/clients/:slug/download-session — baixa o arquivo de sessão (para uso local)
+app.get('/api/clients/:slug/download-session', (req, res) => {
+  const { slug } = req.params;
+  const sessionFile = path.join(SESSIONS_DIR, `${slug}.json`);
+  if (!fs.existsSync(sessionFile)) return res.status(404).json({ error: 'Sessão não encontrada' });
+  res.download(sessionFile, `session-${slug}.json`);
+});
+
 app.get('/api/clients/:slug/status', async (req, res) => {
   const { slug } = req.params;
   const sessionFile = path.join(SESSIONS_DIR, `${slug}.json`);

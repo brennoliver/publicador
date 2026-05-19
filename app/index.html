@@ -330,6 +330,13 @@
     }
     .btn-login:hover { background: var(--red-dark); }
     .btn-login.ok { background: transparent; border: 1px solid rgba(34,197,94,.4); color: var(--green); cursor: default; }
+    .btn-upload-session {
+      padding: 6px 12px; background: transparent; color: var(--muted);
+      border: 1px solid var(--border); border-radius: 6px; font-size: 12px;
+      font-weight: 600; cursor: pointer; white-space: nowrap; transition: all .15s;
+    }
+    .btn-upload-session:hover { border-color: var(--red); color: var(--red); }
+    .session-upload-input { display: none; }
 
     /* ── Spinner ─────────────────────────────────────────────────── */
     .spinner {
@@ -458,6 +465,8 @@
           <div id="loginBanner" class="login-banner">
             <span id="loginIcon">🔴</span>
             <span class="login-banner-text" id="loginText">Conta não conectada. Faça login para publicar.</span>
+            <input type="file" class="session-upload-input" id="sessionFileInput" accept=".json" onchange="uploadSession(this)" />
+            <button class="btn-upload-session" id="uploadSessionBtn" onclick="document.getElementById('sessionFileInput').click()" title="Enviar arquivo de sessão gerado localmente">📤 Sessão</button>
             <button class="btn-login" id="loginBtn" onclick="doLogin()">Conectar</button>
           </div>
 
@@ -743,12 +752,13 @@ async function checkLoginStatus() {
     banner.className = `login-banner${connected ? ' ok' : ''}`;
     document.getElementById('loginIcon').textContent = connected ? '🟢' : '🔴';
 
+    const uploadBtn = document.getElementById('uploadSessionBtn');
     if (connected) {
       text.textContent = 'Conta conectada — pronta para publicar.';
       btn.textContent  = '✓ Conectado';
       btn.className    = 'btn-login ok';
       btn.disabled     = true;
-      // Update local state
+      uploadBtn.style.display = 'none';
       const c = clients.find(x => x.slug === active.slug);
       if (c) { c.hasSession = true; active.hasSession = true; }
     } else {
@@ -757,12 +767,44 @@ async function checkLoginStatus() {
       btn.className    = 'btn-login';
       btn.disabled     = false;
       btn.onclick      = doLogin;
+      uploadBtn.style.display = '';
     }
     renderSidebar();
     checkReady();
   } catch {
     text.textContent = 'Não foi possível verificar a conexão.';
     btn.disabled     = false;
+  }
+}
+
+// ── Upload session ─────────────────────────────────────────────────
+async function uploadSession(input) {
+  if (!active || !input.files[0]) return;
+  const btn = document.getElementById('uploadSessionBtn');
+  btn.textContent = 'Enviando…';
+  btn.disabled = true;
+
+  const form = new FormData();
+  form.append('session', input.files[0]);
+
+  try {
+    const res = await fetch(`/api/clients/${active.slug}/upload-session`, { method: 'POST', body: form });
+    const data = await res.json();
+    if (data.ok) {
+      toast(`Sessão de ${active.name} conectada!`, 'ok');
+      active.hasSession = true;
+      const c = clients.find(x => x.slug === active.slug);
+      if (c) c.hasSession = true;
+      await checkLoginStatus();
+    } else {
+      toast('Erro ao enviar sessão: ' + (data.error || 'inválido'), 'err');
+    }
+  } catch {
+    toast('Erro de conexão ao enviar sessão.', 'err');
+  } finally {
+    btn.textContent = '📤 Sessão';
+    btn.disabled = false;
+    input.value = '';
   }
 }
 
