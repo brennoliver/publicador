@@ -1,23 +1,21 @@
 FROM mcr.microsoft.com/playwright:v1.44.0-jammy
 
+# Create data directories outside /app so they persist via Railway volumes if needed
+RUN mkdir -p /data/clients /data/output /data/sessions /data/uploads
+
 WORKDIR /app
 
-# Copy package files
+# Install Node dependencies first (better layer caching)
 COPY app/package*.json ./
-
-# Install Node dependencies
 RUN npm ci --omit=dev
 
-# Install Playwright browsers (Chromium only)
+# Install Playwright Chromium
 RUN npx playwright install chromium --with-deps
 
-# Copy application files
+# Copy application code
 COPY app/ ./
-COPY clients/ ../clients/
-COPY output/ ../output/
 
-# Create required directories
-RUN mkdir -p ../clients ../output sessions uploads
+ENV DATA_DIR=/data
 
 EXPOSE 3737
 

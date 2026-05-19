@@ -19,9 +19,11 @@ const app  = express();
 const PORT = process.env.PORT || 3737;
 
 // ── Directories ────────────────────────────────────────────────────
-const CLIENTS_DIR = path.join(__dirname, '..', 'clients');
-const UPLOADS_DIR = path.join(__dirname, 'uploads');
-const SESSIONS_DIR = path.join(__dirname, 'sessions');
+// In production (Railway) use /data; locally use sibling dirs relative to app/
+const DATA_DIR     = process.env.DATA_DIR || path.join(__dirname, '..');
+const CLIENTS_DIR  = path.join(DATA_DIR, 'clients');
+const UPLOADS_DIR  = path.join(DATA_DIR, 'uploads');
+const SESSIONS_DIR = path.join(DATA_DIR, 'sessions');
 
 for (const dir of [CLIENTS_DIR, UPLOADS_DIR, SESSIONS_DIR]) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -263,7 +265,7 @@ app.post('/api/publish', async (req, res) => {
   }
 
   if (scheduledAt) {
-    const queueFile = path.join(__dirname, '..', 'output', 'scheduled-queue.json');
+    const queueFile = path.join(DATA_DIR, 'output', 'scheduled-queue.json');
     const queue = fs.existsSync(queueFile) ? JSON.parse(fs.readFileSync(queueFile, 'utf8')) : [];
     const id = `sch-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     queue.push({ id, slug, clientName: client.name, format, filenames, caption, scheduledAt, status: 'pending', createdAt: new Date().toISOString() });
@@ -274,13 +276,13 @@ app.post('/api/publish', async (req, res) => {
 
   try {
     const result = await publishPost({ client, sessionFile, format, filePaths, caption });
-    const logFile = path.join(__dirname, '..', 'output', 'log.md');
+    const logFile = path.join(DATA_DIR, 'output', 'log.md');
     const logLine = `| ${new Date().toLocaleString('pt-BR')} | ${client.name} | ${format} | ${result.postUrl || '—'} | ✅ sucesso |\n`;
     fs.appendFileSync(logFile, logLine);
     res.json({ ok: true, ...result });
   } catch (err) {
     console.error('[publish error]', err.message);
-    const logFile = path.join(__dirname, '..', 'output', 'log.md');
+    const logFile = path.join(DATA_DIR, 'output', 'log.md');
     const logLine = `| ${new Date().toLocaleString('pt-BR')} | ${client.name} | ${format} | — | ❌ ${err.message} |\n`;
     fs.appendFileSync(logFile, logLine);
     res.status(500).json({ error: err.message });
