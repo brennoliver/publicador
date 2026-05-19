@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BM Mídia — Login</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --red:      #E8000E;
+      --red-dark: #B8000B;
+      --black:    #0A0A0A;
+      --s1:       #111111;
+      --s2:       #1A1A1A;
+      --border:   #2A2A2A;
+      --text:     #F0F0F0;
+      --muted:    #888888;
+      --dim:      #555555;
+      --r:        10px;
+    }
+    html, body {
+      height: 100%; background: var(--black); color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif; font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .card {
+      width: 380px; background: var(--s1); border: 1px solid var(--border);
+      border-radius: 18px; padding: 40px 36px; display: flex;
+      flex-direction: column; gap: 28px;
+    }
+    .brand { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    .logo-mark {
+      width: 52px; height: 52px; background: var(--red); border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 20px; color: #fff; letter-spacing: -.5px;
+    }
+    .brand-name { font-size: 18px; font-weight: 700; }
+    .brand-sub  { font-size: 12px; color: var(--muted); margin-top: -8px; }
+
+    form { display: flex; flex-direction: column; gap: 14px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 12px; font-weight: 600; color: var(--muted); }
+    .field input {
+      padding: 11px 14px; background: var(--s2); border: 1px solid var(--border);
+      border-radius: var(--r); color: var(--text); font-size: 14px;
+      font-family: inherit; outline: none; transition: border-color .15s;
+    }
+    .field input:focus { border-color: var(--red); }
+    .field input::placeholder { color: var(--dim); }
+
+    .btn-login {
+      margin-top: 4px; padding: 13px; background: var(--red); color: #fff;
+      border: none; border-radius: var(--r); font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: all .15s; width: 100%;
+    }
+    .btn-login:hover { background: var(--red-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(232,0,14,.3); }
+    .btn-login:active { transform: none; }
+    .btn-login:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .error {
+      display: none; padding: 10px 14px; background: rgba(232,0,14,.08);
+      border: 1px solid rgba(232,0,14,.3); border-radius: var(--r);
+      font-size: 13px; color: #ff6b6b; text-align: center;
+    }
+    .error.show { display: block; }
+
+    .footer { font-size: 11px; color: var(--dim); text-align: center; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="brand">
+    <div class="logo-mark">BM</div>
+    <div class="brand-name">BM Mídia</div>
+    <div class="brand-sub">Instagram Publisher</div>
+  </div>
+
+  <form id="form">
+    <div class="error" id="err">Usuário ou senha incorretos.</div>
+    <div class="field">
+      <label>Usuário</label>
+      <input id="user" type="text" placeholder="seu usuário" autocomplete="username" required />
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input id="pass" type="password" placeholder="••••••••" autocomplete="current-password" required />
+    </div>
+    <button class="btn-login" id="btn" type="submit">Entrar</button>
+  </form>
+
+  <div class="footer">Acesso restrito — BM Mídia</div>
+</div>
+
+<script>
+document.getElementById('form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = document.getElementById('btn');
+  const err = document.getElementById('err');
+  err.classList.remove('show');
+  btn.disabled = true;
+  btn.textContent = 'Entrando…';
+
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: document.getElementById('user').value.trim(),
+        password: document.getElementById('pass').value,
+      }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      window.location.href = '/';
+    } else {
+      err.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Entrar';
+      document.getElementById('pass').value = '';
+    }
+  } catch {
+    err.textContent = 'Erro de conexão. Tente novamente.';
+    err.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+id,name,title,icon,path,execution
+gerenciador,Carlos Clientes,Gerenciador de Contas,🗂️,./agents/gerenciador.agent.md,inline
+publicadora,Paula Publisher,Publicadora de Conteúdo,📤,./agents/publicadora.agent.md,inline
+agendador,Artur Agenda,Agendador de Posts,🗓️,./agents/agendador.agent.md,inline

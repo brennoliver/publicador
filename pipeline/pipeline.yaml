@@ -1,0 +1,18 @@
+name: "Instagram Publisher Pipeline"
+squad: "instagram-publisher"
+version: "1.0.0"
+
+steps:
+  - file: steps/step-01-tela-inicial.md
+  - file: steps/step-02-selecionar-acao.md
+  - file: steps/step-03-gerenciar-clientes.md
+  - file: steps/step-04-selecionar-cliente.md
+  - file: steps/step-05-montar-post.md
+  - file: steps/step-06-confirmar-publicacao.md
+  - file: steps/step-07-publicar-ou-agendar.md
+
+checkpoints:
+  - step-01-tela-inicial
+  - step-02-selecionar-acao
+  - step-04-selecionar-cliente
+  - step-06-confirmar-publicacao

@@ -1,0 +1,25 @@
+name: "Instagram Publisher"
+code: "instagram-publisher"
+description: "Sistema centralizado para publicação de conteúdo no Instagram de múltiplos clientes, com gerenciamento de contas, upload, preview e publicação via Meta Graph API"
+icon: "📤"
+version: "1.0.0"
+language: "pt-BR"
+
+skills:
+  - instagram-publisher
+
+agents:
+  - id: gerenciador
+    file: ./agents/gerenciador.agent.md
+  - id: publicadora
+    file: ./agents/publicadora.agent.md
+  - id: agendador
+    file: ./agents/agendador.agent.md
+
+data:
+  - pipeline/data/guia-credenciais.md
+  - pipeline/data/formatos-suportados.md
+  - pipeline/data/clients-schema.md
+
+pipeline:
+  entry: pipeline/pipeline.yaml

@@ -1,0 +1,30 @@
+squad_code: "instagram-publisher"
+purpose: "Sistema de postagem no Instagram para múltiplos clientes, com seleção de cliente, upload de conteúdo, legenda, preview e publicação direta (imediata ou agendada)"
+domain: "automation"
+
+company:
+  name: "BM Mídia"
+  tone: "profissional"
+  products: "gestão de redes sociais para clientes"
+
+language: "Português (Brasil)"
+
+context:
+  trigger: "ação do usuário (equipe interna seleciona cliente e monta post)"
+  systems: "Instagram Graph API, Meta Business, sistema de clientes local"
+  frequency: "sob demanda"
+
+  who_uses: "equipe interna da agência"
+  connection_method: "Meta Graph API com token por cliente"
+  content_formats:
+    - "imagem (feed)"
+    - "vídeo / reels"
+    - "carrossel (múltiplas imagens)"
+    - "stories"
+  scheduling: "ambos — publicação imediata e agendada com data/hora"
+
+tools_needed:
+  - instagram-publisher
+
+investigation:
+  enabled: false

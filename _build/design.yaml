@@ -1,0 +1,100 @@
+squad:
+  code: "instagram-publisher"
+  name: "Instagram Publisher"
+  description: "Sistema centralizado para publicação de conteúdo no Instagram de múltiplos clientes, com gerenciamento de contas, upload, preview e publicação via Meta Graph API"
+  icon: "📤"
+
+agents:
+  - id: "squads/instagram-publisher/agents/gerenciador"
+    name: "Carlos Clientes"
+    title: "Gerenciador de Contas"
+    icon: "🗂️"
+    execution: inline
+    role_summary: "Mantém o cadastro de clientes com suas credenciais do Instagram. Permite adicionar, listar, reconectar e excluir contas."
+    skills: []
+    tasks:
+      - name: "listar-clientes"
+        file: "tasks/listar-clientes.md"
+        description: "Lista todos os clientes cadastrados com status da conexão"
+      - name: "adicionar-cliente"
+        file: "tasks/adicionar-cliente.md"
+        description: "Cadastra novo cliente com nome e credenciais do Instagram"
+      - name: "reconectar-cliente"
+        file: "tasks/reconectar-cliente.md"
+        description: "Atualiza o token de acesso de um cliente existente"
+      - name: "excluir-cliente"
+        file: "tasks/excluir-cliente.md"
+        description: "Remove um cliente e suas credenciais do sistema"
+
+  - id: "squads/instagram-publisher/agents/publicadora"
+    name: "Paula Publisher"
+    title: "Publicadora de Conteúdo"
+    icon: "📤"
+    execution: inline
+    role_summary: "Recebe o arquivo de mídia e legenda, exibe preview e executa a publicação no Instagram do cliente via Meta Graph API. Suporta imagem, carrossel, vídeo/reels e stories."
+    skills:
+      - instagram-publisher
+    tasks:
+      - name: "montar-post"
+        file: "tasks/montar-post.md"
+        description: "Coleta arquivo, legenda, formato e opção de agendamento"
+      - name: "preview-post"
+        file: "tasks/preview-post.md"
+        description: "Exibe preview formatado do post antes de publicar"
+      - name: "publicar-post"
+        file: "tasks/publicar-post.md"
+        description: "Executa a publicação via Meta Graph API"
+
+  - id: "squads/instagram-publisher/agents/agendador"
+    name: "Artur Agenda"
+    title: "Agendador de Posts"
+    icon: "🗓️"
+    execution: inline
+    role_summary: "Gerencia a fila de posts agendados. Registra posts com data/hora futura e monitora quando devem ser publicados."
+    skills:
+      - instagram-publisher
+    tasks:
+      - name: "registrar-agendamento"
+        file: "tasks/registrar-agendamento.md"
+        description: "Salva o post na fila com data e hora de publicação"
+      - name: "listar-agendamentos"
+        file: "tasks/listar-agendamentos.md"
+        description: "Mostra todos os posts agendados por cliente"
+      - name: "cancelar-agendamento"
+        file: "tasks/cancelar-agendamento.md"
+        description: "Remove um post da fila de agendamentos"
+      - name: "executar-agendamentos"
+        file: "tasks/executar-agendamentos.md"
+        description: "Verifica a fila e publica os posts cujo horário chegou, acionando a Paula Publisher"
+
+pipeline:
+  - step: 1
+    name: "tela-inicial"
+    type: checkpoint
+  - step: 2
+    name: "gerenciar-clientes"
+    type: "agent"
+    agent: "squads/instagram-publisher/agents/gerenciador"
+    execution: inline
+  - step: 3
+    name: "selecionar-cliente"
+    type: checkpoint
+  - step: 4
+    name: "montar-post"
+    type: "agent"
+    agent: "squads/instagram-publisher/agents/publicadora"
+    execution: inline
+  - step: 5
+    name: "confirmar-publicacao"
+    type: checkpoint
+  - step: 6
+    name: "publicar-ou-agendar"
+    type: "agent"
+    agent: "squads/instagram-publisher/agents/publicadora"
+    execution: inline
+
+skills_installed:
+  - instagram-publisher
+
+investigation:
+  enriched: false

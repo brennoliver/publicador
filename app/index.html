@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BM Mídia — Instagram Publisher</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red:       #E8000E;
+      --red-dark:  #B8000B;
+      --red-glow:  rgba(232,0,14,0.15);
+      --black:     #0A0A0A;
+      --s1:        #111111;
+      --s2:        #1A1A1A;
+      --s3:        #222222;
+      --border:    #2A2A2A;
+      --brd-red:   rgba(232,0,14,0.35);
+      --text:      #F0F0F0;
+      --muted:     #888888;
+      --dim:       #555555;
+      --green:     #22C55E;
+      --amber:     #F59E0B;
+      --r:         10px;
+      --rl:        16px;
+    }
+
+    html, body { height: 100%; background: var(--black); color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif; font-size: 14px; line-height: 1.5; }
+
+    /* ── Layout ─────────────────────────────────────────────────── */
+    .app { display: grid; grid-template-rows: 64px 1fr; min-height: 100vh; }
+
+    /* ── Header ─────────────────────────────────────────────────── */
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px; background: var(--s1); border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 50;
+    }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-mark {
+      width: 34px; height: 34px; background: var(--red); border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 15px; color: #fff; letter-spacing: -.5px;
+    }
+    .logo-text { font-size: 15px; font-weight: 700; }
+    .logo-sub  { font-size: 11px; color: var(--muted); }
+
+    /* ── Main ────────────────────────────────────────────────────── */
+    main { display: grid; grid-template-columns: 272px 1fr; height: calc(100vh - 64px); }
+
+    /* ── Sidebar ─────────────────────────────────────────────────── */
+    .sidebar {
+      background: var(--s1); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .sidebar-head {
+      padding: 18px 18px 12px; display: flex; align-items: center;
+      justify-content: space-between; border-bottom: 1px solid var(--border);
+    }
+    .sidebar-title { font-size: 11px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .8px; }
+
+    .btn-add {
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 10px; background: var(--red); color: #fff;
+      border: none; border-radius: 6px; font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: background .15s;
+    }
+    .btn-add:hover { background: var(--red-dark); }
+
+    .clients-list { flex: 1; overflow-y: auto; padding: 8px; }
+    .clients-list::-webkit-scrollbar { width: 3px; }
+    .clients-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .client-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: var(--r); cursor: pointer;
+      transition: background .12s; border: 1px solid transparent; margin-bottom: 2px;
+    }
+    .client-item:hover  { background: var(--s2); }
+    .client-item.active { background: var(--s3); border-color: var(--brd-red); }
+
+    .client-avatar {
+      width: 36px; height: 36px; border-radius: 50%; background: var(--s3);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px; color: var(--red); flex-shrink: 0;
+      border: 1.5px solid var(--border);
+    }
+    .client-item.active .client-avatar { border-color: var(--red); }
+
+    .client-info { flex: 1; min-width: 0; }
+    .client-name {
+      font-size: 13px; font-weight: 600; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    .client-status { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 4px; margin-top: 1px; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .dot.ok  { background: var(--green); }
+    .dot.no  { background: var(--dim); }
+
+    .client-actions { display: flex; gap: 2px; opacity: 0; transition: opacity .12s; }
+    .client-item:hover .client-actions { opacity: 1; }
+
+    .icon-btn {
+      width: 26px; height: 26px; border: none; background: transparent;
+      color: var(--muted); border-radius: 6px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .12s, color .12s; font-size: 13px;
+    }
+    .icon-btn:hover { background: var(--s3); color: var(--text); }
+    .icon-btn.danger:hover { background: rgba(232,0,14,.15); color: var(--red); }
+
+    .sidebar-foot { padding: 12px 16px; border-top: 1px solid var(--border); }
+    .btn-manage {
+      width: 100%; padding: 9px; background: transparent;
+      border: 1px solid var(--border); color: var(--muted);
+      border-radius: var(--r); font-size: 12px; font-weight: 500;
+      cursor: pointer; transition: all .12s;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .btn-manage:hover { border-color: var(--red); color: var(--red); }
+
+    .empty-clients {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 48px 20px; text-align: center; flex: 1;
+    }
+    .empty-icon { font-size: 34px; margin-bottom: 12px; opacity: .35; }
+    .empty-label { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+    /* ── Content ─────────────────────────────────────────────────── */
+    .content { display: flex; flex-direction: column; overflow: hidden; background: var(--black); }
+
+    /* ── Welcome ─────────────────────────────────────────────────── */
+    .welcome {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 14px; padding: 40px; text-align: center; color: var(--muted);
+    }
+    .welcome-icon {
+      width: 72px; height: 72px; background: var(--s2); border: 1px solid var(--border);
+      border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 30px;
+    }
+    .welcome h2 { font-size: 20px; font-weight: 700; color: var(--text); }
+    .welcome p  { font-size: 13px; max-width: 300px; line-height: 1.6; }
+
+    /* ── Editor ──────────────────────────────────────────────────── */
+    .editor { flex: 1; display: grid; grid-template-columns: 1fr 368px; overflow: hidden; }
+
+    .editor-left { display: flex; flex-direction: column; padding: 26px; gap: 20px; overflow-y: auto; }
+    .editor-left::-webkit-scrollbar { width: 3px; }
+    .editor-left::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .section-label {
+      font-size: 11px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .7px; margin-bottom: 8px; display: block;
+    }
+
+    /* ── Upload zone ─────────────────────────────────────────────── */
+    .upload-zone {
+      border: 2px dashed var(--border); border-radius: var(--rl);
+      background: var(--s1); padding: 36px 20px; text-align: center;
+      cursor: pointer; transition: all .18s; position: relative;
+    }
+    .upload-zone:hover, .upload-zone.over { border-color: var(--red); background: var(--red-glow); }
+    .upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .upload-zone .u-icon { font-size: 28px; display: block; margin-bottom: 8px; }
+    .upload-zone .u-label { font-size: 14px; font-weight: 600; }
+    .upload-zone .u-hint  { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .upload-zone .u-hint span { color: var(--red); font-weight: 500; }
+
+    .files-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px,1fr)); gap: 6px; }
+    .file-thumb {
+      position: relative; aspect-ratio: 1; border-radius: var(--r);
+      overflow: hidden; background: var(--s2); border: 1px solid var(--border);
+    }
+    .file-thumb img, .file-thumb video { width: 100%; height: 100%; object-fit: cover; }
+    .file-thumb .rm {
+      position: absolute; top: 3px; right: 3px; width: 18px; height: 18px;
+      background: rgba(0,0,0,.7); border: none; border-radius: 50%; color: #fff;
+      font-size: 10px; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; opacity: 0; transition: opacity .12s;
+    }
+    .file-thumb:hover .rm { opacity: 1; }
+    .file-thumb .num {
+      position: absolute; bottom: 3px; left: 3px; background: rgba(0,0,0,.65);
+      color: #fff; font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 4px;
+    }
+
+    /* ── Format ──────────────────────────────────────────────────── */
+    .fmt-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; }
+    .fmt-btn {
+      padding: 10px 4px; background: var(--s1); border: 1px solid var(--border);
+      border-radius: var(--r); color: var(--muted); cursor: pointer; transition: all .15s;
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      font-size: 11px; font-weight: 500;
+    }
+    .fmt-btn .fi { font-size: 18px; }
+    .fmt-btn:hover { border-color: var(--brd-red); color: var(--text); }
+    .fmt-btn.sel   { border-color: var(--red); background: var(--red-glow); color: var(--red); }
+
+    /* ── Caption ─────────────────────────────────────────────────── */
+    .caption-wrap { position: relative; }
+    .caption-area {
+      width: 100%; min-height: 110px; background: var(--s1); border: 1px solid var(--border);
+      border-radius: var(--r); color: var(--text); font-size: 13px; line-height: 1.6;
+      padding: 11px 13px; resize: vertical; outline: none; font-family: inherit;
+      transition: border-color .15s;
+    }
+    .caption-area:focus { border-color: var(--red); }
+    .caption-area::placeholder { color: var(--dim); }
+    .char-count { position: absolute; bottom: 9px; right: 11px; font-size: 11px; color: var(--dim); pointer-events: none; }
+    .char-count.warn { color: var(--amber); }
+    .char-count.over { color: var(--red); }
+
+    /* ── Schedule ─────────────────────────────────────────────────── */
+    .sched-row { display: flex; align-items: center; gap: 10px; }
+    .toggle { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .tslider {
+      position: absolute; inset: 0; background: var(--s3); border-radius: 20px;
+      cursor: pointer; transition: background .2s; border: 1px solid var(--border);
+    }
+    .tslider::before {
+      content: ''; position: absolute; width: 14px; height: 14px;
+      background: var(--muted); border-radius: 50%; top: 2px; left: 2px;
+      transition: transform .2s, background .2s;
+    }
+    .toggle input:checked + .tslider { background: var(--red-glow); border-color: var(--red); }
+    .toggle input:checked + .tslider::before { transform: translateX(16px); background: var(--red); }
+    .tgl-label { font-size: 13px; }
+    .dt-input {
+      background: var(--s1); border: 1px solid var(--border); border-radius: var(--r);
+      color: var(--text); font-size: 13px; padding: 8px 12px; outline: none;
+      font-family: inherit; width: 220px; transition: border-color .15s; color-scheme: dark;
+    }
+    .dt-input:focus { border-color: var(--red); }
+
+    /* ── Preview panel ───────────────────────────────────────────── */
+    .preview-panel {
+      background: var(--s1); border-left: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .prev-head {
+      padding: 15px 18px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .prev-title { font-size: 11px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .7px; }
+    .prev-body {
+      flex: 1; overflow-y: auto; display: flex; flex-direction: column;
+      align-items: center; padding: 22px 18px; gap: 12px;
+    }
+    .prev-body::-webkit-scrollbar { width: 3px; }
+    .prev-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* Instagram card */
+    .ig-card { width: 268px; background: #1a1a1a; border-radius: 14px; overflow: hidden; border: 1px solid #2a2a2a; }
+    .ig-hdr  { display: flex; align-items: center; gap: 8px; padding: 10px 12px; }
+    .ig-av   { width: 30px; height: 30px; border-radius: 50%;
+               background: linear-gradient(135deg, var(--red), #ff6b35);
+               display: flex; align-items: center; justify-content: center;
+               font-size: 11px; font-weight: 700; color: #fff; }
+    .ig-user { font-size: 12px; font-weight: 700; color: #f0f0f0; }
+    .ig-now  { font-size: 11px; color: #666; }
+    .ig-media { width: 100%; aspect-ratio: 1; background: var(--s3); position: relative; overflow: hidden; }
+    .ig-media img, .ig-media video { width: 100%; height: 100%; object-fit: cover; }
+    .ig-ph { width: 100%; height: 100%; display: flex; flex-direction: column;
+             align-items: center; justify-content: center; color: var(--dim); gap: 6px; font-size: 12px; }
+    .ig-ph-icon { font-size: 26px; opacity: .35; }
+    .ig-dots { position: absolute; bottom: 7px; left: 50%; transform: translateX(-50%);
+               display: flex; gap: 4px; }
+    .ig-dot  { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,.3); }
+    .ig-dot.on { background: #fff; }
+    .ig-acts { display: flex; gap: 12px; padding: 9px 12px 5px; font-size: 17px; }
+    .ig-cap  { padding: 0 12px 12px; }
+    .ig-cap-user { font-size: 11px; font-weight: 700; color: #f0f0f0; margin-right: 3px; }
+    .ig-cap-text { font-size: 11px; color: #ccc; line-height: 1.4; word-break: break-word; }
+    .ig-cap-ph   { font-size: 11px; color: var(--dim); font-style: italic; }
+    .ig-tags { font-size: 11px; color: #8bbeff; margin-top: 2px; word-break: break-word; }
+
+    /* carousel nav */
+    .cnav { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+    .cnav button {
+      background: var(--s2); border: 1px solid var(--border); color: var(--text);
+      width: 24px; height: 24px; border-radius: 6px; cursor: pointer;
+      font-size: 11px; display: flex; align-items: center; justify-content: center;
+    }
+    .cnav button:hover:not(:disabled) { border-color: var(--red); color: var(--red); }
+    .cnav button:disabled { opacity: .3; cursor: not-allowed; }
+
+    /* ── Publish footer ──────────────────────────────────────────── */
+    .pub-foot { padding: 15px 18px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 9px; }
+    .pub-meta { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+    .client-chip {
+      background: var(--s2); border: 1px solid var(--brd-red);
+      border-radius: 20px; padding: 2px 10px; font-weight: 600; color: var(--red); font-size: 11px;
+    }
+
+    .btn-pub {
+      width: 100%; padding: 13px; background: var(--red); color: #fff; border: none;
+      border-radius: var(--r); font-size: 14px; font-weight: 700; cursor: pointer;
+      transition: all .15s; display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-pub:hover:not(:disabled) { background: var(--red-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(232,0,14,.3); }
+    .btn-pub:active { transform: none; }
+    .btn-pub:disabled { opacity: .35; cursor: not-allowed; }
+
+    .btn-sched {
+      width: 100%; padding: 10px; background: transparent; color: var(--text);
+      border: 1px solid var(--border); border-radius: var(--r); font-size: 13px;
+      font-weight: 600; cursor: pointer; transition: all .15s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-sched:hover:not(:disabled) { border-color: var(--red); color: var(--red); }
+    .btn-sched:disabled { opacity: .35; cursor: not-allowed; }
+
+    /* ── Login status banner ─────────────────────────────────────── */
+    .login-banner {
+      display: flex; align-items: center; gap: 10px; padding: 11px 14px;
+      background: rgba(232,0,14,.08); border: 1px solid var(--brd-red);
+      border-radius: var(--r); font-size: 12px;
+    }
+    .login-banner.ok { background: rgba(34,197,94,.08); border-color: rgba(34,197,94,.3); }
+    .login-banner-text { flex: 1; color: var(--text); line-height: 1.4; }
+    .btn-login {
+      padding: 6px 14px; background: var(--red); color: #fff; border: none;
+      border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;
+      transition: background .15s;
+    }
+    .btn-login:hover { background: var(--red-dark); }
+    .btn-login.ok { background: transparent; border: 1px solid rgba(34,197,94,.4); color: var(--green); cursor: default; }
+
+    /* ── Spinner ─────────────────────────────────────────────────── */
+    .spinner {
+      width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.25);
+      border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Modals ──────────────────────────────────────────────────── */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 100;
+      display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px);
+    }
+    .overlay.open { display: flex; }
+    .modal {
+      background: var(--s1); border: 1px solid var(--border); border-radius: var(--rl);
+      width: 430px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
+    }
+    .modal-head {
+      padding: 18px 22px 14px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-title { font-size: 14px; font-weight: 700; }
+    .modal-body  { padding: 18px 22px; display: flex; flex-direction: column; gap: 14px; }
+    .modal-foot  {
+      padding: 14px 22px; border-top: 1px solid var(--border);
+      display: flex; gap: 8px; justify-content: flex-end;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 12px; font-weight: 600; color: var(--muted); }
+    .field input {
+      padding: 9px 12px; background: var(--s2); border: 1px solid var(--border);
+      border-radius: var(--r); color: var(--text); font-size: 13px;
+      font-family: inherit; outline: none; width: 100%; transition: border-color .15s;
+    }
+    .field input:focus { border-color: var(--red); }
+    .field input::placeholder { color: var(--dim); }
+    .field-hint { font-size: 11px; color: var(--dim); line-height: 1.5; }
+
+    .btn-pri  { padding: 8px 16px; background: var(--red); color: #fff; border: none;
+               border-radius: var(--r); font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s; }
+    .btn-pri:hover { background: var(--red-dark); }
+    .btn-sec  { padding: 8px 16px; background: transparent; color: var(--muted);
+               border: 1px solid var(--border); border-radius: var(--r); font-size: 13px;
+               font-weight: 500; cursor: pointer; transition: all .15s; }
+    .btn-sec:hover { border-color: var(--muted); color: var(--text); }
+    .btn-del  { padding: 8px 16px; background: transparent; color: var(--red);
+               border: 1px solid var(--red); border-radius: var(--r); font-size: 13px;
+               font-weight: 600; cursor: pointer; transition: all .15s; }
+    .btn-del:hover { background: var(--red); color: #fff; }
+
+    /* manage list */
+    .mg-list { display: flex; flex-direction: column; gap: 6px; }
+    .mg-item {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+      background: var(--s2); border: 1px solid var(--border); border-radius: var(--r);
+    }
+    .mg-info { flex: 1; }
+    .mg-name { font-size: 13px; font-weight: 600; }
+    .mg-stat { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+    .mg-acts { display: flex; gap: 4px; }
+
+    /* ── Toast ───────────────────────────────────────────────────── */
+    .toasts { position: fixed; bottom: 22px; right: 22px; z-index: 200; display: flex; flex-direction: column; gap: 7px; }
+    .toast {
+      display: flex; align-items: flex-start; gap: 10px; padding: 11px 15px;
+      background: var(--s2); border: 1px solid var(--border); border-radius: var(--r);
+      min-width: 250px; max-width: 340px; animation: tin .2s ease;
+      box-shadow: 0 8px 24px rgba(0,0,0,.4);
+    }
+    .toast.ok  { border-color: rgba(34,197,94,.4); }
+    .toast.err { border-color: var(--brd-red); }
+    .toast-msg { font-size: 13px; line-height: 1.4; }
+    @keyframes tin { from { opacity:0; transform:translateX(16px); } to { opacity:1; transform:none; } }
+
+    /* ── Utils ───────────────────────────────────────────────────── */
+    .hidden { display: none !important; }
+    .red { color: var(--red); }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-mark">BM</div>
+      <div>
+        <div class="logo-text">BM Mídia</div>
+        <div class="logo-sub">Instagram Publisher</div>
+      </div>
+    </div>
+    <button class="btn-add" onclick="openAdd()">+ Adicionar cliente</button>
+  </header>
+
+  <main>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-head">
+        <span class="sidebar-title">Clientes</span>
+      </div>
+      <div class="clients-list" id="clientsList"></div>
+      <div class="sidebar-foot">
+        <button class="btn-manage" onclick="openManage()">⚙️ Gerenciar contas</button>
+      </div>
+    </aside>
+
+    <!-- Content -->
+    <div class="content">
+
+      <!-- Welcome -->
+      <div class="welcome" id="welcome">
+        <div class="welcome-icon">📤</div>
+        <h2>Selecione um cliente</h2>
+        <p>Escolha um cliente na barra lateral para começar a montar o post.</p>
+      </div>
+
+      <!-- Editor -->
+      <div class="editor hidden" id="editor">
+
+        <!-- Left -->
+        <div class="editor-left">
+
+          <!-- Login banner -->
+          <div id="loginBanner" class="login-banner">
+            <span id="loginIcon">🔴</span>
+            <span class="login-banner-text" id="loginText">Conta não conectada. Faça login para publicar.</span>
+            <button class="btn-login" id="loginBtn" onclick="doLogin()">Conectar</button>
+          </div>
+
+          <!-- Upload -->
+          <div>
+            <span class="section-label">Arquivo de mídia</span>
+            <div class="upload-zone" id="uploadZone">
+              <input type="file" id="fileInput" multiple
+                accept="image/jpeg,image/jpg,image/png,video/mp4,video/quicktime"
+                onchange="handleFiles(this.files)" />
+              <span class="u-icon">📁</span>
+              <div class="u-label">Arraste os arquivos ou clique para selecionar</div>
+              <div class="u-hint">JPG, PNG, MP4, MOV · <span>máx. 10 slides</span></div>
+            </div>
+            <div class="files-grid" id="filesGrid" style="margin-top:8px"></div>
+          </div>
+
+          <!-- Format -->
+          <div>
+            <span class="section-label">Formato</span>
+            <div class="fmt-grid">
+              <button class="fmt-btn" data-fmt="image"    onclick="setFmt('image')">   <span class="fi">🖼️</span><span>Imagem</span></button>
+              <button class="fmt-btn" data-fmt="carousel" onclick="setFmt('carousel')"><span class="fi">🗂️</span><span>Carrossel</span></button>
+              <button class="fmt-btn" data-fmt="reels"    onclick="setFmt('reels')">   <span class="fi">🎬</span><span>Reels</span></button>
+              <button class="fmt-btn" data-fmt="stories"  onclick="setFmt('stories')"> <span class="fi">⚡</span><span>Stories</span></button>
+            </div>
+          </div>
+
+          <!-- Caption -->
+          <div>
+            <span class="section-label">Legenda</span>
+            <div class="caption-wrap">
+              <textarea class="caption-area" id="captionInput"
+                placeholder="Escreva a legenda do post… hashtags serão destacadas no preview."
+                oninput="onCaption(this)"></textarea>
+              <span class="char-count" id="charCount">0 / 2200</span>
+            </div>
+          </div>
+
+          <!-- Schedule -->
+          <div>
+            <span class="section-label">Publicação</span>
+            <div class="sched-row">
+              <label class="toggle">
+                <input type="checkbox" id="schedToggle" onchange="onSchedToggle(this)" />
+                <span class="tslider"></span>
+              </label>
+              <span class="tgl-label">Agendar para depois</span>
+            </div>
+            <input type="datetime-local" class="dt-input hidden" id="schedDT" style="margin-top:8px" />
+          </div>
+
+        </div>
+
+        <!-- Preview panel -->
+        <div class="preview-panel">
+          <div class="prev-head">
+            <span class="prev-title">Preview</span>
+            <div class="cnav hidden" id="cnav">
+              <button onclick="prevSlide()">‹</button>
+              <span id="cnavPos">1 / 1</span>
+              <button onclick="nextSlide()">›</button>
+            </div>
+          </div>
+
+          <div class="prev-body">
+            <div class="ig-card">
+              <div class="ig-hdr">
+                <div class="ig-av" id="igAv">?</div>
+                <div>
+                  <div class="ig-user" id="igUser">cliente</div>
+                  <div class="ig-now">• Agora</div>
+                </div>
+              </div>
+              <div class="ig-media" id="igMedia">
+                <div class="ig-ph" id="igPh">
+                  <span class="ig-ph-icon">🖼️</span>
+                  <span>Sem mídia</span>
+                </div>
+                <div class="ig-dots hidden" id="igDots"></div>
+              </div>
+              <div class="ig-acts">❤️ 💬 ✈️</div>
+              <div class="ig-cap">
+                <span class="ig-cap-user" id="igCapUser">cliente</span>
+                <span class="ig-cap-text" id="igCapText">
+                  <span class="ig-cap-ph">Legenda aparece aqui…</span>
+                </span>
+                <div class="ig-tags" id="igTags"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pub-foot">
+            <div class="pub-meta">
+              Publicando para
+              <span class="client-chip" id="pubChip">—</span>
+            </div>
+            <button class="btn-pub" id="btnPub" onclick="publish()" disabled>
+              📤 Publicar agora
+            </button>
+            <button class="btn-sched" id="btnSched" onclick="schedulePost()" disabled>
+              🗓️ Agendar publicação
+            </button>
+          </div>
+        </div>
+      </div><!-- /editor -->
+
+    </div><!-- /content -->
+  </main>
+</div>
+
+<!-- ── Modal: Adicionar Cliente ──────────────────────────── -->
+<div class="overlay" id="ovAdd">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">➕ Adicionar cliente</span>
+      <button class="icon-btn" onclick="close('ovAdd')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Nome do cliente</label>
+        <input id="addName" type="text" placeholder="ex: Restaurante Oliveira" />
+      </div>
+      <p style="font-size:12px;color:var(--muted);line-height:1.6">
+        Após adicionar, você abrirá o Instagram para fazer login uma única vez.
+        A sessão fica salva — nas próximas vezes não precisa fazer login novamente.
+      </p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sec" onclick="close('ovAdd')">Cancelar</button>
+      <button class="btn-pri" onclick="saveClient()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Gerenciar Clientes ─────────────────────────── -->
+<div class="overlay" id="ovManage">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">⚙️ Gerenciar clientes</span>
+      <button class="icon-btn" onclick="close('ovManage')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="mg-list" id="mgList"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sec" onclick="close('ovManage')">Fechar</button>
+      <button class="btn-pri" onclick="close('ovManage');openAdd()">+ Novo cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Confirmar exclusão ─────────────────────────── -->
+<div class="overlay" id="ovDelete">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">🗑️ Excluir cliente</span>
+      <button class="icon-btn" onclick="close('ovDelete')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;line-height:1.6;color:var(--muted)">
+        Excluir <strong id="delName" style="color:var(--text)"></strong>?<br/>
+        A sessão e todas as configurações serão removidas. Ação <span class="red">irreversível</span>.
+      </p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sec" onclick="close('ovDelete')">Cancelar</button>
+      <button class="btn-del" onclick="confirmDelete()">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Publicando ──────────────────────────────────── -->
+<div class="overlay" id="ovPublishing">
+  <div class="modal" style="width:360px;text-align:center">
+    <div class="modal-body" style="align-items:center;padding:32px 24px;gap:16px">
+      <div style="font-size:36px" id="pubStatusIcon">⏳</div>
+      <div style="font-size:15px;font-weight:700" id="pubStatusTitle">Publicando…</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6" id="pubStatusMsg">
+        O navegador vai abrir para publicar o post. Não feche até terminar.
+      </div>
+      <div class="spinner" id="pubSpinner"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast stack -->
+<div class="toasts" id="toasts"></div>
+
+<script>
+// ── API helpers ───────────────────────────────────────────────────
+const api = {
+  async get(url)       { const r = await fetch(url); return r.json(); },
+  async post(url, body){ const r = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); return r.json(); },
+  async del(url)       { const r = await fetch(url,{method:'DELETE'}); return r.json(); },
+};
+
+// ── State ──────────────────────────────────────────────────────────
+let clients      = [];
+let active       = null;   // current client object
+let files        = [];     // { file, name, url, filename } after upload
+let fmt          = null;
+let cidx         = 0;      // carousel index
+let delSlug      = null;
+let loginPolling = null;
+
+// ── Init ───────────────────────────────────────────────────────────
+async function init() {
+  clients = await api.get('/api/clients');
+  renderSidebar();
+}
+
+// ── Sidebar ────────────────────────────────────────────────────────
+function initials(name) {
+  return name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+}
+
+function renderSidebar() {
+  const el = document.getElementById('clientsList');
+  if (!clients.length) {
+    el.innerHTML = `
+      <div class="empty-clients">
+        <div class="empty-icon">🏢</div>
+        <div class="empty-label">Nenhum cliente cadastrado.<br/>Clique em "+ Adicionar cliente".</div>
+      </div>`;
+    return;
+  }
+  el.innerHTML = clients.map(c => {
+    const isActive = active && active.slug === c.slug;
+    const hasSession = c.hasSession;
+    return `
+      <div class="client-item${isActive?' active':''}" onclick="selectClient('${c.slug}')">
+        <div class="client-avatar">${initials(c.name)}</div>
+        <div class="client-info">
+          <div class="client-name">${c.name}</div>
+          <div class="client-status">
+            <span class="dot ${hasSession?'ok':'no'}"></span>
+            <span>${hasSession ? 'Conectado' : 'Não conectado'}</span>
+          </div>
+        </div>
+        <div class="client-actions">
+          <button class="icon-btn danger" title="Excluir" onclick="event.stopPropagation();openDelete('${c.slug}')">🗑️</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── Select client ──────────────────────────────────────────────────
+async function selectClient(slug) {
+  active = clients.find(c => c.slug === slug);
+  if (!active) return;
+  document.getElementById('welcome').classList.add('hidden');
+  document.getElementById('editor').classList.remove('hidden');
+  renderSidebar();
+  updateClientUI();
+  await checkLoginStatus();
+}
+
+function updateClientUI() {
+  if (!active) return;
+  const nick = active.slug.split('-')[0];
+  document.getElementById('igAv').textContent     = initials(active.name);
+  document.getElementById('igUser').textContent    = nick;
+  document.getElementById('igCapUser').textContent = nick;
+  document.getElementById('pubChip').textContent   = active.name;
+  checkReady();
+}
+
+// ── Login status ───────────────────────────────────────────────────
+async function checkLoginStatus() {
+  if (!active) return;
+  const banner = document.getElementById('loginBanner');
+  const text   = document.getElementById('loginText');
+  const btn    = document.getElementById('loginBtn');
+
+  text.textContent = 'Verificando conexão…';
+  btn.disabled = true;
+
+  try {
+    const { hasSession, sessionValid } = await api.get(`/api/clients/${active.slug}/status`);
+    const connected = hasSession && sessionValid;
+
+    banner.className = `login-banner${connected ? ' ok' : ''}`;
+    document.getElementById('loginIcon').textContent = connected ? '🟢' : '🔴';
+
+    if (connected) {
+      text.textContent = 'Conta conectada — pronta para publicar.';
+      btn.textContent  = '✓ Conectado';
+      btn.className    = 'btn-login ok';
+      btn.disabled     = true;
+      // Update local state
+      const c = clients.find(x => x.slug === active.slug);
+      if (c) { c.hasSession = true; active.hasSession = true; }
+    } else {
+      text.textContent = 'Conta não conectada. Clique para fazer login no Instagram.';
+      btn.textContent  = 'Conectar';
+      btn.className    = 'btn-login';
+      btn.disabled     = false;
+      btn.onclick      = doLogin;
+    }
+    renderSidebar();
+    checkReady();
+  } catch {
+    text.textContent = 'Não foi possível verificar a conexão.';
+    btn.disabled     = false;
+  }
+}
+
+// ── Login ──────────────────────────────────────────────────────────
+async function doLogin() {
+  if (!active) return;
+  const btn  = document.getElementById('loginBtn');
+  const text = document.getElementById('loginText');
+
+  btn.disabled     = true;
+  btn.textContent  = 'Abrindo…';
+  text.textContent = 'Abrindo o Instagram no navegador… Faça login e feche a janela.';
+
+  try {
+    await api.post(`/api/clients/${active.slug}/login`, {});
+    // Poll until session is saved
+    toast('Instagram aberto. Faça login e feche a janela quando terminar.', 'info');
+    if (loginPolling) clearInterval(loginPolling);
+    loginPolling = setInterval(async () => {
+      const { hasSession } = await api.get(`/api/clients/${active.slug}/status`);
+      if (hasSession) {
+        clearInterval(loginPolling);
+        loginPolling = null;
+        toast(`${active.name} conectado com sucesso!`, 'ok');
+        await checkLoginStatus();
+      }
+    }, 3000);
+  } catch (err) {
+    text.textContent = 'Erro ao abrir o navegador.';
+    btn.disabled     = false;
+    btn.textContent  = 'Tentar novamente';
+  }
+}
+
+// ── File handling ──────────────────────────────────────────────────
+const uploadZone = document.getElementById('uploadZone');
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('over'));
+uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('over'); handleFiles(e.dataTransfer.files); });
+
+async function handleFiles(fileList) {
+  const valid = Array.from(fileList).filter(f => {
+    const ok = /\.(jpg|jpeg|png|mp4|mov)$/i.test(f.name);
+    if (!ok) toast('Formato não suportado: ' + f.name, 'err');
+    return ok;
+  });
+  if (!valid.length) return;
+
+  // Upload to server
+  const form = new FormData();
+  valid.forEach(f => form.append('files', f));
+  const res = await fetch('/api/upload', { method: 'POST', body: form });
+  const { files: uploaded } = await res.json();
+
+  const newEntries = uploaded.map((u, i) => ({
+    file: valid[i],
+    name: u.name,
+    filename: u.filename,
+    url: URL.createObjectURL(valid[i]),
+    isVideo: /\.(mp4|mov)$/i.test(u.name),
+  }));
+
+  files = [...files, ...newEntries].slice(0, 10);
+  cidx = 0;
+  renderFiles();
+  autoFmt();
+  updatePreview();
+  checkReady();
+}
+
+async function removeFile(idx) {
+  const f = files[idx];
+  if (f) await api.del(`/api/upload/${f.filename}`);
+  files.splice(idx, 1);
+  if (cidx >= files.length) cidx = Math.max(0, files.length - 1);
+  renderFiles();
+  autoFmt();
+  updatePreview();
+  checkReady();
+}
+
+function renderFiles() {
+  const grid = document.getElementById('filesGrid');
+  if (!files.length) { grid.innerHTML = ''; return; }
+  grid.innerHTML = files.map((f, i) => `
+    <div class="file-thumb">
+      ${f.isVideo ? `<video src="${f.url}" muted></video>` : `<img src="${f.url}" />`}
+      <button class="rm" onclick="removeFile(${i})">✕</button>
+      ${files.length > 1 ? `<span class="num">${i+1}</span>` : ''}
+    </div>`).join('');
+}
+
+function autoFmt() {
+  if (!files.length) { fmt = null; renderFmt(); return; }
+  const hasVid = files.some(f => f.isVideo);
+  if (hasVid) { setFmt('reels', false); return; }
+  if (files.length > 1) { setFmt('carousel', false); return; }
+  if (!fmt) setFmt('image', false);
+}
+
+// ── Format ─────────────────────────────────────────────────────────
+function setFmt(f, upd = true) {
+  fmt = f;
+  renderFmt();
+  if (upd) updatePreview();
+}
+function renderFmt() {
+  document.querySelectorAll('.fmt-btn').forEach(b => b.classList.toggle('sel', b.dataset.fmt === fmt));
+}
+
+// ── Caption ─────────────────────────────────────────────────────────
+function onCaption(el) {
+  const n = el.value.length;
+  const cc = document.getElementById('charCount');
+  cc.textContent = `${n} / 2200`;
+  cc.className = 'char-count' + (n > 2200 ? ' over' : n > 1800 ? ' warn' : '');
+  updatePreview();
+  checkReady();
+}
+
+// ── Schedule ─────────────────────────────────────────────────────────
+function onSchedToggle(el) {
+  document.getElementById('schedDT').classList.toggle('hidden', !el.checked);
+}
+
+// ── Preview ───────────────────────────────────────────────────────────
+function updatePreview() {
+  const media = document.getElementById('igMedia');
+  const ph    = document.getElementById('igPh');
+  const dots  = document.getElementById('igDots');
+  const cnav  = document.getElementById('cnav');
+  const cap   = document.getElementById('captionInput').value;
+
+  // caption / hashtags split
+  const m = cap.match(/(#\S+\s*)+$/);
+  const mainTxt = m ? cap.slice(0, cap.length - m[0].length).trim() : cap;
+  const tags    = m ? m[0].trim() : '';
+
+  const capEl = document.getElementById('igCapText');
+  capEl.innerHTML = mainTxt
+    ? mainTxt
+    : '<span class="ig-cap-ph">Legenda aparece aqui…</span>';
+  document.getElementById('igTags').textContent = tags;
+
+  if (!files.length) {
+    ph.classList.remove('hidden');
+    Array.from(media.children).forEach(c => { if (c !== ph && c !== dots) c.remove(); });
+    dots.classList.add('hidden');
+    cnav.classList.add('hidden');
+    return;
+  }
+
+  ph.classList.add('hidden');
+  Array.from(media.children).forEach(c => { if (c !== ph && c !== dots) c.remove(); });
+
+  const f = files[cidx] || files[0];
+  const el = document.createElement(f.isVideo ? 'video' : 'img');
+  el.src = f.url;
+  if (f.isVideo) { el.muted = true; el.loop = true; el.autoplay = true; }
+  media.insertBefore(el, dots);
+
+  if (files.length > 1) {
+    dots.classList.remove('hidden');
+    cnav.classList.remove('hidden');
+    dots.innerHTML = files.map((_, i) => `<div class="ig-dot${i===cidx?' on':''}"></div>`).join('');
+    document.getElementById('cnavPos').textContent = `${cidx+1} / ${files.length}`;
+    const [prev, next] = cnav.querySelectorAll('button');
+    prev.disabled = cidx === 0;
+    next.disabled = cidx === files.length - 1;
+  } else {
+    dots.classList.add('hidden');
+    cnav.classList.add('hidden');
+  }
+}
+
+function prevSlide() { if (cidx > 0) { cidx--; updatePreview(); } }
+function nextSlide() { if (cidx < files.length - 1) { cidx++; updatePreview(); } }
+
+// ── Readiness ──────────────────────────────────────────────────────
+function checkReady() {
+  const cap  = document.getElementById('captionInput').value;
+  const ok   = !!active && active.hasSession && files.length > 0 && !!fmt && cap.length <= 2200;
+  document.getElementById('btnPub').disabled   = !ok;
+  document.getElementById('btnSched').disabled = !ok;
+}
+
+// ── Publish ────────────────────────────────────────────────────────
+async function publish() {
+  const cap = document.getElementById('captionInput').value;
+  if (!validate(cap)) return;
+
+  setPublishing(true, 'Publicando…', 'O navegador vai abrir para publicar. Não feche até terminar.', '⏳');
+
+  try {
+    const res = await api.post('/api/publish', {
+      slug: active.slug,
+      format: fmt,
+      filenames: files.map(f => f.filename),
+      caption: cap,
+    });
+
+    if (res.error) throw new Error(res.error);
+
+    setPublishing(false);
+    toast(`Post publicado!${res.postUrl ? ' ' + res.postUrl : ''}`, 'ok');
+    resetEditor();
+  } catch (err) {
+    setPublishing(false);
+    toast('Erro: ' + err.message, 'err');
+  }
+}
+
+async function schedulePost() {
+  const cap = document.getElementById('captionInput').value;
+  const dt  = document.getElementById('schedDT').value;
+  if (!dt) { toast('Selecione a data e hora de agendamento.', 'err'); return; }
+  if (!validate(cap)) return;
+
+  const scheduled = new Date(dt);
+  if (scheduled <= new Date()) { toast('A data deve ser no futuro.', 'err'); return; }
+
+  try {
+    const res = await api.post('/api/publish', {
+      slug: active.slug,
+      format: fmt,
+      filenames: files.map(f => f.filename),
+      caption: cap,
+      scheduledAt: scheduled.toISOString(),
+    });
+    if (res.error) throw new Error(res.error);
+    toast(`Agendado para ${scheduled.toLocaleString('pt-BR')} — ID: ${res.id}`, 'ok');
+    resetEditor();
+  } catch (err) {
+    toast('Erro: ' + err.message, 'err');
+  }
+}
+
+function validate(cap) {
+  if (!files.length) { toast('Adicione ao menos um arquivo de mídia.', 'err'); return false; }
+  if (!fmt) { toast('Selecione o formato do post.', 'err'); return false; }
+  if (cap.length > 2200) { toast('Legenda ultrapassa 2200 caracteres.', 'err'); return false; }
+  if (fmt === 'carousel' && files.length < 2) { toast('Carrossel requer mínimo 2 imagens.', 'err'); return false; }
+  if (!active.hasSession) { toast('Conecte a conta do Instagram primeiro.', 'err'); return false; }
+  return true;
+}
+
+function setPublishing(show, title = '', msg = '', icon = '⏳') {
+  const ov = document.getElementById('ovPublishing');
+  ov.classList.toggle('open', show);
+  if (show) {
+    document.getElementById('pubStatusTitle').textContent = title;
+    document.getElementById('pubStatusMsg').textContent   = msg;
+    document.getElementById('pubStatusIcon').textContent  = icon;
+    document.getElementById('pubSpinner').classList.remove('hidden');
+  }
+}
+
+function resetEditor() {
+  files = []; cidx = 0; fmt = null;
+  document.getElementById('captionInput').value = '';
+  document.getElementById('charCount').textContent = '0 / 2200';
+  document.getElementById('filesGrid').innerHTML = '';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('schedToggle').checked = false;
+  document.getElementById('schedDT').classList.add('hidden');
+  renderFmt();
+  updatePreview();
+  checkReady();
+}
+
+// ── Modals ────────────────────────────────────────────────────────
+function openAdd()    { openModal('ovAdd'); }
+function openManage() {
+  const list = document.getElementById('mgList');
+  if (!clients.length) {
+    list.innerHTML = '<p style="font-size:13px;color:var(--muted);text-align:center;padding:16px">Nenhum cliente cadastrado.</p>';
+  } else {
+    list.innerHTML = clients.map(c => `
+      <div class="mg-item">
+        <div class="client-avatar" style="border-color:var(--border)">${initials(c.name)}</div>
+        <div class="mg-info">
+          <div class="mg-name">${c.name}</div>
+          <div class="mg-stat">
+            <span class="dot ${c.hasSession?'ok':'no'}"></span>
+            <span>${c.hasSession ? 'Conectado' : 'Não conectado'}</span>
+          </div>
+        </div>
+        <div class="mg-acts">
+          <button class="icon-btn danger" title="Excluir" onclick="close('ovManage');openDelete('${c.slug}')">🗑️</button>
+        </div>
+      </div>`).join('');
+  }
+  openModal('ovManage');
+}
+
+function openDelete(slug) {
+  const c = clients.find(x => x.slug === slug);
+  if (!c) return;
+  delSlug = slug;
+  document.getElementById('delName').textContent = c.name;
+  openModal('ovDelete');
+}
+
+async function saveClient() {
+  const name = document.getElementById('addName').value.trim();
+  if (!name) { toast('Informe o nome do cliente.', 'err'); return; }
+
+  const res = await api.post('/api/clients', { name });
+  if (res.error) { toast(res.error, 'err'); return; }
+
+  clients.push({ ...res, hasSession: false });
+  close('ovAdd');
+  document.getElementById('addName').value = '';
+  renderSidebar();
+  toast(`"${res.name}" adicionado! Selecione para conectar o Instagram.`, 'ok');
+}
+
+async function confirmDelete() {
+  if (!delSlug) return;
+  const c = clients.find(x => x.slug === delSlug);
+  const name = c?.name || delSlug;
+  await api.del(`/api/clients/${delSlug}`);
+  if (active && active.slug === delSlug) {
+    active = null;
+    document.getElementById('welcome').classList.remove('hidden');
+    document.getElementById('editor').classList.add('hidden');
+  }
+  clients = clients.filter(x => x.slug !== delSlug);
+  close('ovDelete');
+  renderSidebar();
+  toast(`"${name}" excluído.`, 'info');
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function close(id)     { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o && o.id !== 'ovPublishing') close(o.id); });
+});
+
+// ── Toast ─────────────────────────────────────────────────────────
+function toast(msg, type = 'info') {
+  const icons = { ok: '✅', err: '❌', info: 'ℹ️' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span class="toast-msg">${msg}</span>`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), type === 'ok' ? 5000 : 4000);
+}
+
+// ── Start ─────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
