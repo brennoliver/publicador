@@ -122,7 +122,9 @@ export async function getSessionStatus(slug, sessionFile) {
 export async function publishPost({ client, sessionFile, format, filePaths, caption }) {
   console.log(`[publish] Starting for ${client.name} — format: ${format}`);
 
-  const { browser, context } = await launchBrowser(sessionFile, false);
+  // Headless em produção (Railway), visível localmente para debug
+  const headless = process.env.NODE_ENV === 'production';
+  const { browser, context } = await launchBrowser(sessionFile, headless);
   const page = await context.newPage();
 
   try {
