@@ -18,6 +18,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app  = express();
 const PORT = process.env.PORT || 3737;
 
+// Railway terminates TLS at the proxy — trust it so secure cookies work
+app.set('trust proxy', 1);
+
 // ── Directories ────────────────────────────────────────────────────
 // In production (Railway) use /data; locally use sibling dirs relative to app/
 const DATA_DIR     = process.env.DATA_DIR || path.join(__dirname, '..');
