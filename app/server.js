@@ -59,6 +59,17 @@ function requireAuth(req, res, next) {
   return res.redirect('/login');
 }
 
+// ── Diagnóstico público (remover após confirmar deploy) ────────────
+app.get('/api/health', (req, res) => {
+  res.json({
+    ok: true,
+    brenno: !!process.env.BRENNO_PASS,
+    bianca: !!process.env.BIANCA_PASS,
+    session_secret: !!process.env.SESSION_SECRET,
+    node_env: process.env.NODE_ENV,
+  });
+});
+
 // ── Static: login page (public) ───────────────────────────────────
 app.get('/login', (req, res) => {
   if (req.session?.user) return res.redirect('/');
